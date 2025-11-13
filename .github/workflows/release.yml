@@ -26,7 +26,7 @@ jobs:
 
       # 4. Build using ShadowJar
       - name: Build shadow JAR
-        run: ./gradlew shadowJar --no-daemon
+        run: ./gradlew shadowJar
 
       # 5. Find built JAR
       - name: Find built JAR
