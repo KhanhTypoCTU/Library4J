@@ -4,6 +4,9 @@ import com.google.common.base.Preconditions;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -45,5 +48,17 @@ public class ResourceUtils {
             throw new RuntimeException("Resource : " + resourceLocation + " is not present.");
         }
         return result;
+    }
+
+    public static Image getImage(String resourceLocation) {
+        return ResourceUtils.getResourceOrThrow(resourceLocation,
+                input -> {
+                    try {
+                        return ImageIO.read(input);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        );
     }
 }

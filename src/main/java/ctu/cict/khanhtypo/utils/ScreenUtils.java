@@ -28,6 +28,7 @@ public class ScreenUtils {
     }
 
     public static void packFrame() {
+        if (frame == null) return;
         frame.pack();
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int screenWidth = (int) screenSize.getWidth();
