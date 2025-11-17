@@ -10,6 +10,10 @@ public class ScreenUtils {
     private ScreenUtils() {
     }
 
+    public static JFrame getFrame() {
+        return frame;
+    }
+
     public static Rectangle getDefaultScreenBound() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int width = (int) screenSize.getWidth() / 2;

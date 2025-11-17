@@ -2,14 +2,20 @@ package ctu.cict.khanhtypo.books;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 public record Book(BookId id, String title, String ISBN, int pageCount, Date publishedDate,
                    String thumbnailUrl, String shortDescription, String longDescription, String status,
                    String[] authors, String[] categories) {
+    private static final DateFormat DATE_FORMATTER = new SimpleDateFormat("MMMM dd, yyyy");
+
+    public String isbnString() {
+        return ISBN == null ? "none" : ISBN;
+    }
 
     public String authorsString() {
         return ArrayUtils.isEmpty(authors) ? "" : String.join(", ", authors);
@@ -23,7 +29,7 @@ public record Book(BookId id, String title, String ISBN, int pageCount, Date pub
         try {
             BookId id = BookId.from(document.get("_id"));
             String title = document.getString("title");
-            String ISBN = document.getString("ISBN");
+            String ISBN = document.getString("isbn");
             int pageCount = document.getInteger("pageCount");
             Date publishedDate = document.getDate("publishedDate");
             String thumbnailUrl = document.getString("thumbnailUrl");
@@ -42,7 +48,7 @@ public record Book(BookId id, String title, String ISBN, int pageCount, Date pub
 
     public Document toDocument() {
         return new Document()
-                .append("_id", id.getAsObject())
+                .append("_id", id.getAsGenericObject())
                 .append("title", title)
                 .append("ISBN", ISBN)
                 .append("pageCount", pageCount)
@@ -53,5 +59,13 @@ public record Book(BookId id, String title, String ISBN, int pageCount, Date pub
                 .append("status", status)
                 .append("authors", List.of(authors))
                 .append("categories", List.of(categories));
+    }
+
+    public String statusString() {
+        return this.status.equals("PUBLISH") ? "Released" : this.status.equals("MEAP") ? "Early-Access" : this.status;
+    }
+
+    public String dateString() {
+        return this.publishedDate == null ? "no data" : DATE_FORMATTER.format(this.publishedDate);
     }
 }
