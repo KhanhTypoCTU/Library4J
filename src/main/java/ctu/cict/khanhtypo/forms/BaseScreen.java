@@ -7,13 +7,17 @@ import ctu.cict.khanhtypo.Main;
 import ctu.cict.khanhtypo.books.Book;
 import ctu.cict.khanhtypo.utils.DatabaseUtils;
 import ctu.cict.khanhtypo.utils.MathUtils;
+import ctu.cict.khanhtypo.utils.ScreenUtils;
+import net.miginfocom.swing.MigLayout;
 import org.bson.Document;
 
 import javax.swing.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public class BaseScreen implements IBookDB {
     private static final int MAX_PER_PAGE = 15;
@@ -41,24 +45,47 @@ public class BaseScreen implements IBookDB {
         this.calculateMaxPages();
         title.setFont(Main.FONT_PATUA);
         booksScrollable.getVerticalScrollBar().setUnitIncrement(12);
-        booksContainer.setLayout(new BoxLayout(booksContainer, BoxLayout.Y_AXIS));
-        loadBooks(1, false);
+        booksContainer.setLayout(new MigLayout("wrap" + (Main.IN_DEV ? ", debug" : ""), "[]", "[]"));
+        this.loadBooks(1, false);
         nextPage.addActionListener(e ->
                 loadBooks(currentPage + 1, false));
         previousPage.addActionListener(e ->
                 loadBooks(currentPage - 1, false));
-        Stream.of(addBookButton, searchButton, nextPage, previousPage)
-                .forEach(b -> {
-                    b.setFont(Main.FONT_PATUA.deriveFont(15f));
-                    b.setFocusPainted(false);
-                });
         booksScrollable.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                int width = e.getComponent().getWidth();
-                for (BookEntry bookEntry : bookEntries) {
-                    bookEntry.resizeWidth(width);
-                }
+                resizeAllEntries();
+            }
+        });
+
+        List<JButton> buttons = List.of(addBookButton, searchButton, nextPage, previousPage);
+        buttons.forEach(b -> {
+            b.setFont(Main.FONT_PATUA.deriveFont(15f));
+            b.setFocusPainted(false);
+        });
+        addBookButton.addActionListener(e -> {
+            SwingUtilities.invokeLater(() -> {
+                JDialog dialog = new JDialog(Main.baseFrame, "Adding A New Book", true);
+                buttons.forEach(b -> b.setEnabled(false));
+                FillableFormScreen addScreen = new FillableFormScreen(dialog.getTitle(), "Create", this::onBookCreateRequested);
+                dialog.setContentPane(addScreen.getBasePanel());
+                dialog.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        buttons.forEach(b -> b.setEnabled(true));
+                    }
+                });
+                ScreenUtils.packFrame(dialog);
+                dialog.setVisible(true);
+            });
+        });
+    }
+
+    private void resizeAllEntries() {
+        SwingUtilities.invokeLater(() -> {
+            int width = booksScrollable.getWidth();
+            for (BookEntry bookEntry : bookEntries) {
+                bookEntry.resizeWidth(width);
             }
         });
     }
@@ -87,20 +114,14 @@ public class BaseScreen implements IBookDB {
         for (int i = 0; i < books.length; i++) {
             Book book = books[i];
             BookEntry bookEntry = new BookEntry(this, book);
-            booksContainer.add(bookEntry.getBasePanel(booksContainer));
+            SwingUtilities.invokeLater(() -> booksContainer.add(bookEntry.getBasePanel(booksScrollable), "span"));
             entries[i] = bookEntry;
         }
         this.bookEntries = entries;
         booksContainer.revalidate();
         booksContainer.repaint();
-        SwingUtilities.invokeLater(() -> {
-                    JScrollBar verticalScrollBar = this.booksScrollable.getVerticalScrollBar();
-                    if (keepScrollPosition)
-                        verticalScrollBar.setValue(MathUtils.clampInclusive(verticalScrollBar.getValue(), verticalScrollBar.getMinimum(), verticalScrollBar.getMaximum()));
-                    else verticalScrollBar.setValue(0);
-                    onPageChanged();
-                }
-        );
+        onPageChanged();
+        reloadScrollBar(keepScrollPosition);
     }
 
     private void onPageChanged() {
@@ -113,6 +134,7 @@ public class BaseScreen implements IBookDB {
             this.previousPage.setEnabled(true);
         }
         this.pagesDisplayLabel.setText(currentPage + "/" + maxPages);
+
     }
 
     public void deleteBookEntry(Book book) {
@@ -128,4 +150,20 @@ public class BaseScreen implements IBookDB {
         this.reloadTitle();
         SwingUtilities.updateComponentTreeUI(basePanel);
     }
+
+    public void reloadScrollBar(boolean keepScrollPosition) {
+        SwingUtilities.invokeLater(() -> {
+                    JScrollBar verticalScrollBar = this.booksScrollable.getVerticalScrollBar();
+                    if (keepScrollPosition)
+                        verticalScrollBar.setValue(MathUtils.clampInclusive(verticalScrollBar.getValue(), verticalScrollBar.getMinimum(), verticalScrollBar.getMaximum()));
+                    else verticalScrollBar.setValue(0);
+                    booksScrollable.setVerticalScrollBar(verticalScrollBar);
+                }
+        );
+    }
+
+    private void onBookCreateRequested(Book book) {
+
+    }
+
 }

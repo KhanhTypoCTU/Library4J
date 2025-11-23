@@ -1,17 +1,18 @@
 package ctu.cict.khanhtypo.utils;
 
+import org.apache.commons.lang3.function.Consumers;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.util.Arrays;
+import java.util.function.Consumer;
 
 public class ScreenUtils {
-    private static JFrame frame;
     private static final boolean isHeadless = GraphicsEnvironment.isHeadless();
 
     private ScreenUtils() {
-    }
-
-    public static JFrame getFrame() {
-        return frame;
     }
 
     public static Rectangle getDefaultScreenBound() {
@@ -27,12 +28,7 @@ public class ScreenUtils {
         return !isHeadless;
     }
 
-    public static void setFrame(JFrame f) {
-        frame = f;
-    }
-
-    public static void packFrame() {
-        if (frame == null) return;
+    public static void packFrame(Window frame) {
         frame.pack();
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int screenWidth = (int) screenSize.getWidth();
@@ -40,6 +36,28 @@ public class ScreenUtils {
         frame.setLocation(
                 (screenWidth / 2) - (frame.getWidth() / 2),
                 (screenHeight / 2) - (frame.getHeight() / 2)
+        );
+    }
+
+    public static JPanel wrapPanel(Component... components) {
+        return wrapPanel(Consumers.nop(), components);
+    }
+
+    public static JPanel wrapPanel(Consumer<JPanel> modifiers, Component... components) {
+        return MathUtils.make(new JPanel(), panel -> {
+            Arrays.stream(components).forEach(panel::add);
+            modifiers.accept(panel);
+        });
+    }
+
+    public static void trackSize(Component component) {
+        component.addComponentListener(
+                new  ComponentAdapter() {
+                    @Override
+                    public void componentResized(ComponentEvent e) {
+                        System.out.println(component.getSize());
+                    }
+                }
         );
     }
 }

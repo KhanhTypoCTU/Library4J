@@ -9,8 +9,17 @@ import java.util.Date;
 import java.util.List;
 
 public record Book(BookId id, String title, String ISBN, int pageCount, Date publishedDate,
-                   String thumbnailUrl, String shortDescription, String longDescription, String status,
+                   String thumbnailUrl, String shortDescription, String longDescription, BookStatus status,
                    String[] authors, String[] categories) {
+
+    public Book(BookId id, String title, String ISBN, int pageCount, Date publishedDate, BookStatus status, String[] authors, String[] categories) {
+        this(
+                id, title, ISBN, pageCount, publishedDate,
+                "", "", "", status,
+                authors, categories
+        );
+    }
+
     private static final DateFormat DATE_FORMATTER = new SimpleDateFormat("MMMM dd, yyyy");
 
     public String isbnString() {
@@ -18,11 +27,11 @@ public record Book(BookId id, String title, String ISBN, int pageCount, Date pub
     }
 
     public String authorsString() {
-        return ArrayUtils.isEmpty(authors) ? "" : String.join(", ", authors);
+        return ArrayUtils.isEmpty(authors) ? "none" : String.join(", ", authors);
     }
 
     public String categoriesString() {
-        return ArrayUtils.isEmpty(categories) ? "" : String.join(", ", categories);
+        return ArrayUtils.isEmpty(categories) ? "none" : String.join(", ", categories);
     }
 
     public static Book fromDocument(Document document) {
@@ -36,9 +45,10 @@ public record Book(BookId id, String title, String ISBN, int pageCount, Date pub
             String shortDescription = document.getString("shortDescription");
             String longDescription = document.getString("longDescription");
             String status = document.getString("status");
+            BookStatus bookStatus = BookStatus.valueOf(status);
             List<String> authors = document.getList("authors", String.class);
             List<String> categories = document.getList("categories", String.class);
-            return new Book(id, title, ISBN, pageCount, publishedDate, thumbnailUrl, shortDescription, longDescription, status, authors.toArray(String[]::new), categories.toArray(String[]::new));
+            return new Book(id, title, ISBN, pageCount, publishedDate, thumbnailUrl, shortDescription, longDescription, bookStatus, authors.toArray(String[]::new), categories.toArray(String[]::new));
         } catch (ClassCastException e) {
             System.out.println("Cast Exception caught: " + document);
         }
@@ -62,7 +72,7 @@ public record Book(BookId id, String title, String ISBN, int pageCount, Date pub
     }
 
     public String statusString() {
-        return this.status.equals("PUBLISH") ? "Released" : this.status.equals("MEAP") ? "Early-Access" : this.status;
+        return this.status.getDisplayText();
     }
 
     public String dateString() {

@@ -59,6 +59,7 @@ public class BookEntry {
                 toMultiline(
                         book.title(),
                         "Authors: " + book.authorsString(),
+                        "Categories: " + book.categoriesString(),
                         "Status: " + book.statusString(),
                         "Pages: " + book.pageCount() + "  |  ISBN : " + book.isbnString(),
                         "Release Date: " + book.dateString()
@@ -81,9 +82,10 @@ public class BookEntry {
         SwingUtilities.invokeLater(() -> {
             Dimension size = basePanel.getSize();
             size.height = this.panelHeight;
-            basePanel.setMaximumSize(size);
             size.width = entriesContainer.getWidth();
-            basePanel.setSize(size);
+            basePanel.setMinimumSize(size);
+            basePanel.setMaximumSize(size);
+            basePanel.setPreferredSize(size);
             SwingUtilities.updateComponentTreeUI(basePanel);
         });
         return this.basePanel;
@@ -93,7 +95,7 @@ public class BookEntry {
         SwingUtilities.invokeLater(() -> {
             Dimension size = basePanel.getSize();
             size.width = targetWidth;
-            basePanel.setMaximumSize(size);
+            basePanel.setSize(size);
             SwingUtilities.updateComponentTreeUI(basePanel);
         });
     }
