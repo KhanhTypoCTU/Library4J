@@ -1,8 +1,12 @@
 package ctu.cict.khanhtypo.forms.component;
 
 import ctu.cict.khanhtypo.Main;
+import ctu.cict.khanhtypo.books.BookStatus;
 import ctu.cict.khanhtypo.utils.MathUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.WordUtils;
 import org.bson.BsonDateTime;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -46,11 +50,11 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
     }
 
     @Override
-    public BsonDateTime getAsBsonValue() {
-        return this.now.isSelected() ? new BsonDateTime(Date.from(Instant.now()).getTime()) :
-                new BsonDateTime(MathUtils.make(Calendar.getInstance(),
+    public Object getAsBsonValue() {
+        return this.now.isSelected() ? Date.from(Instant.now()) :
+                MathUtils.make(Calendar.getInstance(),
                         c -> c.set(this.date.getYear(), this.date.getMonthValue() - 1, this.date.getDayOfMonth())
-                ).getTime().getTime());
+                ).getTime();
     }
 
     @Override
@@ -60,16 +64,16 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
 
     @SuppressWarnings("DataFlowIssue")
     private static final class DateField extends JPanel {
-        private JComboBox<Integer> date, month, year;
+        private JComboBox<Object> date, month, year;
         private final DatePicker datePicker;
 
         public DateField(DatePicker datePicker) {
             super(new FlowLayout(FlowLayout.LEFT));
             this.datePicker = datePicker;
             date = month = year = null;
-            date = this.add(1, 31);
-            month = this.add(1, 12);
-            year = this.add(1970, 2050);
+            date = this.add(1, 31, null);
+            month = this.add(1, 12, new MonthRenderer());
+            year = this.add(1970, 2050, null);
         }
 
         private void validateDay() {
@@ -87,8 +91,9 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
         }
 
         @SuppressWarnings("unchecked")
-        private JComboBox<Integer> add(int from, int to) {
-            JComboBox<Integer> comboBox = (JComboBox<Integer>) super.add(new JComboBox<>(IntStream.rangeClosed(from, to).boxed().toArray(Integer[]::new)));
+        private JComboBox<Object> add(int from, int to, @Nullable CenteredCellRenderer renderer) {
+            JComboBox<Object> comboBox = (JComboBox<Object>) super.add(new JComboBox<>(IntStream.rangeClosed(from, to).boxed().toArray(Integer[]::new)));
+            comboBox.setRenderer(renderer == null ? new CenteredCellRenderer() : renderer);
             comboBox.setFont(Main.FONT_PATUA);
             comboBox.addItemListener(event -> {
                 if (event.getStateChange() == ItemEvent.SELECTED) {
@@ -105,6 +110,20 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
                     (int) this.month.getSelectedItem(),
                     (int) this.year.getSelectedItem()
             );
+        }
+
+        private static final class MonthRenderer extends CenteredCellRenderer {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                return MathUtils.make((JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus),
+                        label -> label.setText(WordUtils.capitalizeFully(Month.of((int) value).toString())));
+            }
+        }
+
+        private static class CenteredCellRenderer extends DefaultListCellRenderer {
+            public CenteredCellRenderer() {
+                super.setHorizontalAlignment(JLabel.CENTER);
+            }
         }
     }
 }

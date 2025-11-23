@@ -8,15 +8,15 @@ import java.awt.*;
 import java.util.function.Function;
 
 public interface IBsonRepresentableComponent {
-    BsonValue getAsBsonValue();
+    Object getAsBsonValue();
 
     Component getComponent();
 
     static IBsonRepresentableComponent wrap(JTextComponent component) {
         return new IBsonRepresentableComponent() {
             @Override
-            public BsonValue getAsBsonValue() {
-                return new BsonString(component.getText());
+            public Object getAsBsonValue() {
+                return component.getText();
             }
 
             @Override
@@ -26,10 +26,10 @@ public interface IBsonRepresentableComponent {
         };
     }
 
-    static <T extends Component> IBsonRepresentableComponent wrap(T component, Function<T, BsonValue> bsonValueFunction) {
+    static <T extends Component> IBsonRepresentableComponent wrap(T component, Function<T, Object> bsonValueFunction) {
         return new IBsonRepresentableComponent() {
             @Override
-            public BsonValue getAsBsonValue() {
+            public Object getAsBsonValue() {
                 return bsonValueFunction.apply(component);
             }
 

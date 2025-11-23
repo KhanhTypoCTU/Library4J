@@ -8,22 +8,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-public record Book(BookId id, String title, String ISBN, int pageCount, Date publishedDate,
-                   String thumbnailUrl, String shortDescription, String longDescription, BookStatus status,
-                   String[] authors, String[] categories) {
-
-    public Book(BookId id, String title, String ISBN, int pageCount, Date publishedDate, BookStatus status, String[] authors, String[] categories) {
-        this(
-                id, title, ISBN, pageCount, publishedDate,
-                "", "", "", status,
-                authors, categories
-        );
-    }
-
+public record Book(BookId id, String title, String isbn, int pageCount, Date publishedDate, String thumbnailUrl,
+                   String shortDescription, String longDescription, BookStatus status, String[] authors,
+                   String[] categories) {
     private static final DateFormat DATE_FORMATTER = new SimpleDateFormat("MMMM dd, yyyy");
 
     public String isbnString() {
-        return ISBN == null ? "none" : ISBN;
+        return isbn == null ? "none" : isbn;
     }
 
     public String authorsString() {
@@ -35,8 +26,12 @@ public record Book(BookId id, String title, String ISBN, int pageCount, Date pub
     }
 
     public static Book fromDocument(Document document) {
+        return fromDocument(document, false);
+    }
+
+    public static Book fromDocument(Document document, boolean deferred) {
         try {
-            BookId id = BookId.from(document.get("_id"));
+            BookId id = BookId.from(document.get("_id"), deferred);
             String title = document.getString("title");
             String ISBN = document.getString("isbn");
             int pageCount = document.getInteger("pageCount");
@@ -48,7 +43,19 @@ public record Book(BookId id, String title, String ISBN, int pageCount, Date pub
             BookStatus bookStatus = BookStatus.valueOf(status);
             List<String> authors = document.getList("authors", String.class);
             List<String> categories = document.getList("categories", String.class);
-            return new Book(id, title, ISBN, pageCount, publishedDate, thumbnailUrl, shortDescription, longDescription, bookStatus, authors.toArray(String[]::new), categories.toArray(String[]::new));
+            return new BookBuilder()
+                    .setId(id)
+                    .setTitle(title)
+                    .setISBN(ISBN)
+                    .setPageCount(pageCount)
+                    .setPublishedDate(publishedDate)
+                    .setThumbnailUrl(thumbnailUrl)
+                    .setShortDescription(shortDescription)
+                    .setLongDescription(longDescription)
+                    .setStatus(bookStatus)
+                    .setAuthors(authors.toArray(String[]::new))
+                    .setCategories(categories.toArray(String[]::new))
+                    .createBook();
         } catch (ClassCastException e) {
             System.out.println("Cast Exception caught: " + document);
         }
@@ -58,9 +65,9 @@ public record Book(BookId id, String title, String ISBN, int pageCount, Date pub
 
     public Document toDocument() {
         return new Document()
-                .append("_id", id.getAsGenericObject())
+                //.append("_id", id.getAsGenericObject())
                 .append("title", title)
-                .append("ISBN", ISBN)
+                .append("isbn", isbn)
                 .append("pageCount", pageCount)
                 .append("publishedDate", publishedDate)
                 .append("thumbnailUrl", thumbnailUrl)

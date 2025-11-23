@@ -1,6 +1,9 @@
 package ctu.cict.khanhtypo;
 
-import ctu.cict.khanhtypo.forms.BaseScreen;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
+import ctu.cict.khanhtypo.forms.BookDatabaseScreen;
+import ctu.cict.khanhtypo.utils.DatabaseUtils;
 import ctu.cict.khanhtypo.utils.ResourceUtils;
 import ctu.cict.khanhtypo.utils.ScreenUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -29,7 +32,7 @@ public class Main {
                         baseFrame = frame;
                         frame.setIconImage(ResourceUtils.getImage("icon.png"));
                         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                        BaseScreen baseScreen = new BaseScreen();
+                        BookDatabaseScreen baseScreen = new BookDatabaseScreen();
                         frame.setContentPane(baseScreen.getBasePanel());
                         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                         frame.setVisible(true);

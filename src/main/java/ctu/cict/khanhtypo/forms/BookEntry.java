@@ -61,7 +61,7 @@ public class BookEntry {
                         "Authors: " + book.authorsString(),
                         "Categories: " + book.categoriesString(),
                         "Status: " + book.statusString(),
-                        "Pages: " + book.pageCount() + "  |  ISBN : " + book.isbnString(),
+                        "Pages: " + book.pageCount() + "  |  isbn : " + book.isbnString(),
                         "Release Date: " + book.dateString()
                 )
         );

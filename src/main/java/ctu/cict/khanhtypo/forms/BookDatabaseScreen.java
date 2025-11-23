@@ -2,7 +2,9 @@ package ctu.cict.khanhtypo.forms;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.mongodb.MongoWriteException;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.result.InsertOneResult;
 import ctu.cict.khanhtypo.Main;
 import ctu.cict.khanhtypo.books.Book;
 import ctu.cict.khanhtypo.utils.DatabaseUtils;
@@ -19,7 +21,7 @@ import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.Objects;
 
-public class BaseScreen implements IBookDB {
+public class BookDatabaseScreen implements IBookDB {
     private static final int MAX_PER_PAGE = 15;
     private int maxPages;
     private int currentPage;
@@ -34,12 +36,13 @@ public class BaseScreen implements IBookDB {
     private JPanel booksContainer;
     private JLabel pagesDisplayLabel;
     private BookEntry[] bookEntries;
+    private final List<JButton> leftSideButtons;
 
     public JPanel getBasePanel() {
         return basePanel;
     }
 
-    public BaseScreen() {
+    public BookDatabaseScreen() {
         this.reloadTitle();
         pagesDisplayLabel.setFont(Main.FONT_PATUA);
         this.calculateMaxPages();
@@ -58,27 +61,31 @@ public class BaseScreen implements IBookDB {
             }
         });
 
-        List<JButton> buttons = List.of(addBookButton, searchButton, nextPage, previousPage);
-        buttons.forEach(b -> {
+        leftSideButtons = List.of(addBookButton, searchButton, nextPage, previousPage);
+        leftSideButtons.forEach(b -> {
             b.setFont(Main.FONT_PATUA.deriveFont(15f));
             b.setFocusPainted(false);
         });
         addBookButton.addActionListener(e -> {
             SwingUtilities.invokeLater(() -> {
                 JDialog dialog = new JDialog(Main.baseFrame, "Adding A New Book", true);
-                buttons.forEach(b -> b.setEnabled(false));
-                FillableFormScreen addScreen = new FillableFormScreen(dialog.getTitle(), "Create", this::onBookCreateRequested);
+                //leftSideButtons.forEach(b -> b.setEnabled(false));
+                FillableFormScreen addScreen = new FillableFormScreen(this, dialog, dialog.getTitle(), FormOperation.CREATE);
                 dialog.setContentPane(addScreen.getBasePanel());
                 dialog.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosing(WindowEvent e) {
-                        buttons.forEach(b -> b.setEnabled(true));
+                        setButtonsEnabled(false);
                     }
                 });
                 ScreenUtils.packFrame(dialog);
                 dialog.setVisible(true);
+                dialog.setResizable(false);
             });
         });
+    }
+
+    public void setButtonsEnabled(boolean enabled) {
     }
 
     private void resizeAllEntries() {
@@ -102,7 +109,6 @@ public class BaseScreen implements IBookDB {
     private void loadBooks(int page, boolean keepScrollPosition) {
         this.currentPage = page;
         Preconditions.checkArgument(page > 0, "Page number must be greater than zero.");
-        @SuppressWarnings("NullableProblems")
         Book[] books = Iterables.toArray(Iterables.filter(
                 DatabaseUtils.getBooks().find().skip((page - 1) * MAX_PER_PAGE)
                         .limit(MAX_PER_PAGE)
@@ -143,6 +149,13 @@ public class BaseScreen implements IBookDB {
         this.refreshDatabaseScreen();
     }
 
+    @Override
+    public void addBookEntry(Book book) throws MongoWriteException {
+        InsertOneResult insertOneResult = DatabaseUtils.getBooks().insertOne(book.toDocument());
+        System.out.println("Created book \"" + book.title() + "\", ID : " + insertOneResult.getInsertedId());
+        this.refreshDatabaseScreen();
+    }
+
     private void refreshDatabaseScreen() {
         this.calculateMaxPages();
         this.currentPage = MathUtils.clampInclusive(this.currentPage, 0, maxPages);
@@ -161,9 +174,4 @@ public class BaseScreen implements IBookDB {
                 }
         );
     }
-
-    private void onBookCreateRequested(Book book) {
-
-    }
-
 }
