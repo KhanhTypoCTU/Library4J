@@ -8,11 +8,13 @@ import com.mongodb.client.result.InsertOneResult;
 import ctu.cict.khanhtypo.Main;
 import ctu.cict.khanhtypo.books.Book;
 import ctu.cict.khanhtypo.forms.fillableform.CreateBookScreen;
+import ctu.cict.khanhtypo.forms.fillableform.SearchBookScreen;
 import ctu.cict.khanhtypo.utils.DatabaseUtils;
 import ctu.cict.khanhtypo.utils.MathUtils;
 import ctu.cict.khanhtypo.utils.ScreenUtils;
 import net.miginfocom.swing.MigLayout;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import javax.swing.*;
 import java.awt.event.ComponentAdapter;
@@ -47,7 +49,7 @@ public class BookDatabaseScreen implements IBookDB {
         this.calculateMaxPages();
         title.setFont(Main.FONT_PATUA);
         booksScrollable.getVerticalScrollBar().setUnitIncrement(12);
-        booksContainer.setLayout(new MigLayout("wrap" + (Main.IN_DEV ? ", debug" : ""), "[]", "[]"));
+        booksContainer.setLayout(new MigLayout("wrap" + (Main.IN_DEV ? ", debug" : ""), "[left]", "[]"));
         this.loadBooks(1, false);
         nextPage.addActionListener(e ->
                 loadBooks(currentPage + 1, false));
@@ -65,17 +67,25 @@ public class BookDatabaseScreen implements IBookDB {
             b.setFont(Main.FONT_PATUA.deriveFont(15f));
             b.setFocusPainted(false);
         });
-        addBookButton.addActionListener(e -> {
-            SwingUtilities.invokeLater(() -> {
-                JDialog dialog = new JDialog(Main.baseFrame, "Adding A New Book", true);
-                dialog.setResizable(false);
-                //leftSideButtons.forEach(b -> b.setEnabled(false));
-                FillableFormScreen addScreen = new CreateBookScreen(this, dialog);
-                dialog.setContentPane(addScreen.getBasePanel());
-                ScreenUtils.packFrame(dialog);
-                dialog.setVisible(true);
-            });
-        });
+        addBookButton.addActionListener(e ->
+                SwingUtilities.invokeLater(() -> {
+                    JDialog dialog = new JDialog(Main.baseFrame, "Adding A New Book", true);
+                    dialog.setResizable(false);
+                    //leftSideButtons.forEach(b -> b.setEnabled(false));
+                    FillableFormScreen addScreen = new CreateBookScreen(this, dialog);
+                    dialog.setContentPane(addScreen.getBasePanel());
+                    ScreenUtils.packFrame(dialog);
+                    dialog.setVisible(true);
+                }));
+        searchButton.addActionListener(e ->
+                SwingUtilities.invokeLater(() -> {
+                    JDialog dialog = new JDialog(Main.baseFrame, "Looking For Book(s)", true);
+                    dialog.setResizable(false);
+                    FillableFormScreen addScreen = new SearchBookScreen(this, dialog);
+                    dialog.setContentPane(addScreen.getBasePanel());
+                    ScreenUtils.packFrame(dialog);
+                    dialog.setVisible(true);
+                }));
     }
 
     private void resizeAllEntries() {
@@ -114,8 +124,10 @@ public class BookDatabaseScreen implements IBookDB {
         BookEntry[] entries = new BookEntry[books.length];
         for (int i = 0; i < books.length; i++) {
             Book book = books[i];
-            BookEntry bookEntry = new BookEntry(this, book);
-            SwingUtilities.invokeLater(() -> booksContainer.add(bookEntry.getBasePanel(booksScrollable), "span"));
+            BookEntry bookEntry = new BookEntry(this, book, false);
+            SwingUtilities.invokeLater(() ->
+                    booksContainer.add(bookEntry.getBasePanel(booksScrollable), "span")
+            );
             entries[i] = bookEntry;
         }
         this.bookEntries = entries;
@@ -151,6 +163,14 @@ public class BookDatabaseScreen implements IBookDB {
         this.refreshDatabaseScreen();
     }
 
+    @Override
+    public void searchBooks(Bson filter) {
+        Book[] books = Iterables.toArray(this.getCollection().find(filter).map(Book::fromDocument), Book.class);
+        SwingUtilities.invokeLater(() -> {
+            SearchResultScreen screen = new SearchResultScreen(this, books);
+        });
+    }
+
     private void refreshDatabaseScreen() {
         this.calculateMaxPages();
         this.currentPage = MathUtils.clampInclusive(this.currentPage, 0, maxPages);
@@ -168,5 +188,10 @@ public class BookDatabaseScreen implements IBookDB {
                     booksScrollable.setVerticalScrollBar(verticalScrollBar);
                 }
         );
+    }
+
+    @Override
+    public String toString() {
+        return "MAIN SCREEN";
     }
 }

@@ -24,7 +24,7 @@ public class BookEntry {
     private JPanel contentsPanel;
     private int panelHeight;
 
-    public BookEntry(IBookDB bookDB, Book book) {
+    public BookEntry(IBookDB bookDB, Book book, boolean withButtons) {
         this.bookDB = bookDB;
         this.book = book;
         this.panel1.setLayout(new BoxLayout(this.panel1, BoxLayout.Y_AXIS));
@@ -43,6 +43,9 @@ public class BookEntry {
             }
             SwingUtilities.updateComponentTreeUI(panel1);
         });
+        if (!withButtons) {
+            operationsPanel.setVisible(false);
+        }
         SwingUtilities.updateComponentTreeUI(operationsPanel);
         SwingUtilities.updateComponentTreeUI(basePanel);
     }
@@ -75,6 +78,10 @@ public class BookEntry {
     static {
         removeIcon = new ImageIcon(ResourceUtils.getImage("remove.png").getScaledInstance(16, 16, Image.SCALE_FAST));
         updateIcon = new ImageIcon(ResourceUtils.getImage("update.png").getScaledInstance(16, 16, Image.SCALE_FAST));
+    }
+
+    public void loadEntryToContainer(JComponent list) {
+        list.add(this.getBasePanel(Main.baseFrame), "span");
     }
 
     public Component getBasePanel(Component entriesContainer) {

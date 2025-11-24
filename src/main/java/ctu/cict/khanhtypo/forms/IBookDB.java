@@ -5,6 +5,7 @@ import com.mongodb.client.MongoCollection;
 import ctu.cict.khanhtypo.books.Book;
 import ctu.cict.khanhtypo.utils.DatabaseUtils;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 public interface IBookDB {
     void deleteBookEntry(Book book);
@@ -14,4 +15,6 @@ public interface IBookDB {
     default MongoCollection<Document> getCollection() {
         return DatabaseUtils.getBooks();
     }
+
+    void searchBooks(Bson filter);
 }

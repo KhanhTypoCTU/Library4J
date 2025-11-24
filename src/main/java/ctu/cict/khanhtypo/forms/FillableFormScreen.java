@@ -1,5 +1,7 @@
 package ctu.cict.khanhtypo.forms;
 
+import com.google.common.base.Preconditions;
+import com.mongodb.client.model.search.FieldSearchPath;
 import ctu.cict.khanhtypo.Main;
 import ctu.cict.khanhtypo.books.Book;
 import ctu.cict.khanhtypo.forms.component.IBsonRepresentableComponent;
@@ -17,7 +19,9 @@ import javax.swing.text.AbstractDocument;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public abstract class FillableFormScreen {
     private static final int TEXT_PANEL_COLUMNS = 30;
@@ -31,6 +35,7 @@ public abstract class FillableFormScreen {
         this.databaseScreen = databaseBridge;
         this.window = window;
         this.fields = this.constructFields();
+        Preconditions.checkArgument(fields.length > 0, this.getClass().getSimpleName() + " must provide at least one field");
 
         int numPairs = fields.length;
         JPanel p = new JPanel(new MigLayout());
@@ -140,8 +145,18 @@ public abstract class FillableFormScreen {
                 t -> ((AbstractDocument) t.getDocument()).setDocumentFilter(new RegexBasedDocumentFilter(pattern)));
     }
 
+    protected final Stream<FormField> getFields() {
+        return Stream.of(this.fields);
+    }
+
     public record FormField(String name, String tooltip, String bsonKey, IBsonRepresentableComponent bsonValueMapper,
                             Function<Component, String> errorFactory) {
+
+        private static final Function<Component, String> noError = n -> null;
+        public FormField(String name, String tooltip, String bsonKey) {
+            this(name, tooltip, bsonKey, noError);
+        }
+
         public FormField(String name, String tooltip, String bsonKey, Function<Component, String> errorFactory) {
             this(name, tooltip, bsonKey, TEXT_PANEL_COLUMNS, errorFactory);
         }
