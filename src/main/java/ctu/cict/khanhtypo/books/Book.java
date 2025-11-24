@@ -1,7 +1,6 @@
 package ctu.cict.khanhtypo.books;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.bson.Document;
 
 import java.text.DateFormat;
@@ -19,7 +18,7 @@ public final class Book {
     private final BookStatus status;
     private final String[] authors;
     private final String[] categories;
-    private BookId deferredBookId ;
+    private BookId deferredBookId;
 
     public Book(String title, String isbn, int pageCount, Date publishedDate,
                 BookStatus status, String[] authors, String[] categories) {

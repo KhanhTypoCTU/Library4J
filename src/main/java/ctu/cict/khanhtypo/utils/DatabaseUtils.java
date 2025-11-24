@@ -7,7 +7,7 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
 public class DatabaseUtils {
-    private static MongoClient mongoClient;
+    private static final MongoClient mongoClient;
     public static final String DATABASE_NAME = "Book";
     private static final MongoDatabase database;
     public static final String COLLECTION_BOOKS = "allBooks";

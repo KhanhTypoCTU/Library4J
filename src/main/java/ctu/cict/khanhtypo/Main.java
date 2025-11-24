@@ -1,16 +1,12 @@
 package ctu.cict.khanhtypo;
 
-import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.Indexes;
 import ctu.cict.khanhtypo.forms.BookDatabaseScreen;
-import ctu.cict.khanhtypo.utils.DatabaseUtils;
 import ctu.cict.khanhtypo.utils.ResourceUtils;
 import ctu.cict.khanhtypo.utils.ScreenUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
 import java.io.IOException;
 import java.util.function.Function;
 

@@ -68,7 +68,7 @@ public class BookEntry {
     }
 
     private String toMultiline(String line1, String... lines) {
-        this.panelHeight =(int)(30f * (lines.length + 1));
+        this.panelHeight = (int) (30f * (lines.length + 1));
         return Arrays.stream(lines).reduce(line1, (a, b) -> a + "\n" + b);
     }
 

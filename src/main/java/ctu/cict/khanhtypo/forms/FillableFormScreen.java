@@ -2,8 +2,6 @@ package ctu.cict.khanhtypo.forms;
 
 import ctu.cict.khanhtypo.Main;
 import ctu.cict.khanhtypo.books.Book;
-import ctu.cict.khanhtypo.books.BookStatus;
-import ctu.cict.khanhtypo.forms.component.DatePicker;
 import ctu.cict.khanhtypo.forms.component.IBsonRepresentableComponent;
 import ctu.cict.khanhtypo.utils.MathUtils;
 import ctu.cict.khanhtypo.utils.SpringUtilities;
@@ -143,7 +141,7 @@ public abstract class FillableFormScreen {
     }
 
     public record FormField(String name, String tooltip, String bsonKey, IBsonRepresentableComponent bsonValueMapper,
-                             Function<Component, String> errorFactory) {
+                            Function<Component, String> errorFactory) {
         public FormField(String name, String tooltip, String bsonKey, Function<Component, String> errorFactory) {
             this(name, tooltip, bsonKey, TEXT_PANEL_COLUMNS, errorFactory);
         }

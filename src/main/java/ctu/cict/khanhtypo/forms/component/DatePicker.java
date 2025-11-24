@@ -1,11 +1,8 @@
 package ctu.cict.khanhtypo.forms.component;
 
 import ctu.cict.khanhtypo.Main;
-import ctu.cict.khanhtypo.books.BookStatus;
 import ctu.cict.khanhtypo.utils.MathUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
-import org.bson.BsonDateTime;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;

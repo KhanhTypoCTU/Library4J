@@ -3,7 +3,6 @@ package ctu.cict.khanhtypo.books;
 import ctu.cict.khanhtypo.utils.MathUtils;
 
 import javax.swing.*;
-import javax.swing.text.JTextComponent;
 import java.awt.*;
 
 public enum BookStatus {
@@ -26,7 +25,7 @@ public enum BookStatus {
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
             return MathUtils.make((JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus),
-            label -> label.setText(((BookStatus) value).getDisplayText()));
+                    label -> label.setText(((BookStatus) value).getDisplayText()));
         }
     }
 }
