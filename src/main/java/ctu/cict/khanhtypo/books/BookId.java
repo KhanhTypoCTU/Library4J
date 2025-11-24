@@ -14,7 +14,7 @@ public final class BookId {
         this.objectId = objectId;
     }
 
-    public static BookId from(Object unknownType, boolean deferred) {
+    public static BookId from(Object unknownType) {
         if (unknownType instanceof ObjectId oid) {
             return new BookId(null, oid);
         } else if (unknownType instanceof Integer integer) {
@@ -22,8 +22,7 @@ public final class BookId {
         } else if (unknownType instanceof BsonInt32 int32) {
             return new BookId(int32.getValue(), null);
         }
-        if (deferred && unknownType == null) return null;
-        throw new IllegalArgumentException("Unknown type: " + unknownType);
+        throw new IllegalArgumentException("Unknown BookID type: " + unknownType);
     }
 
     public boolean isObjectId() {

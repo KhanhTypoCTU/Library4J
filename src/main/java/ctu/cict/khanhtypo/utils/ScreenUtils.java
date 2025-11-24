@@ -29,14 +29,17 @@ public class ScreenUtils {
     }
 
     public static void packFrame(Window frame) {
-        frame.pack();
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int screenWidth = (int) screenSize.getWidth();
-        int screenHeight = (int) screenSize.getHeight();
-        frame.setLocation(
-                (screenWidth / 2) - (frame.getWidth() / 2),
-                (screenHeight / 2) - (frame.getHeight() / 2)
-        );
+        SwingUtilities.invokeLater(() -> {
+            frame.pack();
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            int screenWidth = (int) screenSize.getWidth();
+            int screenHeight = (int) screenSize.getHeight();
+            frame.setLocation(
+                    (screenWidth / 2) - (frame.getWidth() / 2),
+                    (screenHeight / 2) - (frame.getHeight() / 2)
+            );
+        });
+        //frame.pack();
     }
 
     public static JPanel wrapPanel(Component... components) {
@@ -52,7 +55,7 @@ public class ScreenUtils {
 
     public static void trackSize(Component component) {
         component.addComponentListener(
-                new  ComponentAdapter() {
+                new ComponentAdapter() {
                     @Override
                     public void componentResized(ComponentEvent e) {
                         System.out.println(component.getSize());

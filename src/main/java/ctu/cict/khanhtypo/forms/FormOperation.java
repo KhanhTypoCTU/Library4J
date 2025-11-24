@@ -1,7 +1,8 @@
 package ctu.cict.khanhtypo.forms;
 
 public enum FormOperation {
-    CREATE("Create");
+    CREATE("Create"),
+    SEARCH("Search");
 
     private final String displayName;
 

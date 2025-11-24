@@ -71,9 +71,10 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
             super(new FlowLayout(FlowLayout.LEFT));
             this.datePicker = datePicker;
             date = month = year = null;
-            date = this.add(1, 31, null);
             month = this.add(1, 12, new MonthRenderer());
+            date = this.add(1, 31, null);
             year = this.add(1970, 2050, null);
+            year.setSelectedIndex(2025 - 1970);
         }
 
         private void validateDay() {

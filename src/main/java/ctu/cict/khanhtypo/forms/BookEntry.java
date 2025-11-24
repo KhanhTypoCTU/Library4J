@@ -57,7 +57,7 @@ public class BookEntry {
     private void load(Book book) {
         this.content.setText(
                 toMultiline(
-                        book.title(),
+                        "Title: " + book.title(),
                         "Authors: " + book.authorsString(),
                         "Categories: " + book.categoriesString(),
                         "Status: " + book.statusString(),

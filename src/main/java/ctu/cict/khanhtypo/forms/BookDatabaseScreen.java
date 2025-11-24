@@ -7,6 +7,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.InsertOneResult;
 import ctu.cict.khanhtypo.Main;
 import ctu.cict.khanhtypo.books.Book;
+import ctu.cict.khanhtypo.forms.fillableform.CreateBookScreen;
 import ctu.cict.khanhtypo.utils.DatabaseUtils;
 import ctu.cict.khanhtypo.utils.MathUtils;
 import ctu.cict.khanhtypo.utils.ScreenUtils;
@@ -16,8 +17,6 @@ import org.bson.Document;
 import javax.swing.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.Objects;
 
@@ -69,23 +68,14 @@ public class BookDatabaseScreen implements IBookDB {
         addBookButton.addActionListener(e -> {
             SwingUtilities.invokeLater(() -> {
                 JDialog dialog = new JDialog(Main.baseFrame, "Adding A New Book", true);
+                dialog.setResizable(false);
                 //leftSideButtons.forEach(b -> b.setEnabled(false));
-                FillableFormScreen addScreen = new FillableFormScreen(this, dialog, dialog.getTitle(), FormOperation.CREATE);
+                FillableFormScreen addScreen = new CreateBookScreen(this, dialog);
                 dialog.setContentPane(addScreen.getBasePanel());
-                dialog.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosing(WindowEvent e) {
-                        setButtonsEnabled(false);
-                    }
-                });
                 ScreenUtils.packFrame(dialog);
                 dialog.setVisible(true);
-                dialog.setResizable(false);
             });
         });
-    }
-
-    public void setButtonsEnabled(boolean enabled) {
     }
 
     private void resizeAllEntries() {
@@ -109,12 +99,17 @@ public class BookDatabaseScreen implements IBookDB {
     private void loadBooks(int page, boolean keepScrollPosition) {
         this.currentPage = page;
         Preconditions.checkArgument(page > 0, "Page number must be greater than zero.");
+        @SuppressWarnings("NullableProblems")
         Book[] books = Iterables.toArray(Iterables.filter(
                 DatabaseUtils.getBooks().find().skip((page - 1) * MAX_PER_PAGE)
                         .limit(MAX_PER_PAGE)
                         .map(Book::fromDocument), Objects::nonNull), Book.class);
 
 
+        displayBooks(keepScrollPosition, books);
+    }
+
+    public void displayBooks(boolean keepScrollPosition, Book[] books) {
         booksContainer.removeAll();
         BookEntry[] entries = new BookEntry[books.length];
         for (int i = 0; i < books.length; i++) {

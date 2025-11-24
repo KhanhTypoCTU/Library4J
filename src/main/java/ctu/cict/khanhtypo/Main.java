@@ -10,6 +10,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
 import java.io.IOException;
 import java.util.function.Function;
 
@@ -34,9 +35,10 @@ public class Main {
                         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                         BookDatabaseScreen baseScreen = new BookDatabaseScreen();
                         frame.setContentPane(baseScreen.getBasePanel());
-                        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                        //frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                         frame.setVisible(true);
                         frame.setMinimumSize(new Dimension(MIN_FRAME_WIDTH, 0));
+                        ScreenUtils.packFrame(frame);
                         baseScreen.reloadScrollBar(false);
                     }
             );
