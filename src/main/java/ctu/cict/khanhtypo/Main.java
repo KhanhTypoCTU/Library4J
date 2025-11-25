@@ -18,7 +18,7 @@ public class Main {
     public static final Font FONT_CRIMSON;
     public static final Font FONT_CRIMSON_ITALIC;
     public static boolean IN_DEV = false;
-    public static Frame baseFrame;
+    public static JFrame baseFrame;
 
     public static void main(String[] args) {
         //https://github.com/ozlerhakan/mongodb-json-files/blob/master/datasets/books.json
@@ -33,11 +33,13 @@ public class Main {
                         frame.setContentPane(baseScreen.getBasePanel());
                         //frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                         frame.setVisible(true);
-                        frame.setMinimumSize(new Dimension(MIN_FRAME_WIDTH, 0));
+                        frame.setPreferredSize(new Dimension(1140, 880));
                         ScreenUtils.packFrame(frame);
-                        baseScreen.reloadScrollBar(false);
+                        frame.setResizable(false);
                     }
             );
+
+
         } else System.out.println("Screen can not be opened because this Java Runtime Environment is headless.");
     }
 

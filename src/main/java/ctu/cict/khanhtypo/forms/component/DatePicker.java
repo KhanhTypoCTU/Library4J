@@ -17,28 +17,30 @@ import java.util.Date;
 import java.util.stream.IntStream;
 
 public class DatePicker extends JPanel implements IBsonRepresentableComponent {
+    private final DateField datePickerField;
     private LocalDate date;
-    private final JRadioButton now;
+    private final JRadioButton nowButton;
+    private final JRadioButton datePickerButton;
+    private final ButtonGroup group;
 
     public DatePicker() {
         super(new FlowLayout(FlowLayout.LEFT));
         this.date = LocalDate.now();
-        JRadioButton now = (JRadioButton) super.add(new JRadioButton("Now."));
-        this.now = now;
-        now.setFont(Main.FONT_PATUA);
-        JRadioButton handInput = (JRadioButton) super.add(new JRadioButton("Date:"));
-        handInput.setFont(Main.FONT_PATUA);
+        this.nowButton = (JRadioButton) super.add(new JRadioButton("Now."));
+        nowButton.setFont(Main.FONT_PATUA);
+        this.datePickerButton = (JRadioButton) super.add(new JRadioButton("Date:"));
+        datePickerButton.setFont(Main.FONT_PATUA);
 
-        Component dateField = super.add(new DateField(this));
-        dateField.setEnabled(false);
+        this.datePickerField = (DateField) super.add(new DateField(this));
+        datePickerField.setEnabled(false);
 
-        ButtonGroup group = new ButtonGroup();
-        group.add(now);
-        group.add(handInput);
-        group.setSelected(now.getModel(), true);
+        this.group = new ButtonGroup();
+        group.add(nowButton);
+        group.add(datePickerButton);
+        group.setSelected(nowButton.getModel(), true);
 
-        now.addItemListener(event ->
-                dateField.setEnabled(!now.isSelected())
+        nowButton.addItemListener(event ->
+                datePickerField.setEnabled(!nowButton.isSelected())
         );
     }
 
@@ -46,9 +48,18 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
         this.date = LocalDate.of(year, month, date);
     }
 
+    public void setDate(Date date) {
+        if (date != null) {
+            this.datePickerField.setDate(date);
+            this.group.setSelected(datePickerButton.getModel(), true);
+            this.datePickerField.setEnabled(true);
+        }
+    }
+
     @Override
     public Object getAsBsonValue() {
-        return this.now.isSelected() ? Date.from(Instant.now()) :
+        return this.nowButton.isSelected() ?
+                Date.from(Instant.now()) :
                 MathUtils.make(Calendar.getInstance(),
                         c -> c.set(this.date.getYear(), this.date.getMonthValue() - 1, this.date.getDayOfMonth())
                 ).getTime();
@@ -61,23 +72,20 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
 
     @SuppressWarnings("DataFlowIssue")
     private static final class DateField extends JPanel {
-        private JComboBox<Object> date, month, year;
+        private IntRangedComboBox date, month, year;
         private final DatePicker datePicker;
 
         public DateField(DatePicker datePicker) {
             super(new FlowLayout(FlowLayout.LEFT));
             this.datePicker = datePicker;
             date = month = year = null;
-            month = this.add(1, 12, new MonthRenderer());
+            month = this.add(1, 12, new AlternativeTextRenderer<Integer>(
+                    JLabel.CENTER,
+                    month -> WordUtils.capitalizeFully(Month.of(month).toString())
+            ));
             date = this.add(1, 31, null);
             year = this.add(1970, 2050, null);
-            year.setSelectedIndex(2025 - 1970);
-        }
-
-        private void validateDay() {
-            int month = (int) this.month.getSelectedItem();
-            int day = MathUtils.clampInclusive(((int) this.date.getSelectedItem()), 1, Month.of(month).length(Year.isLeap((int) year.getSelectedItem())));
-            this.date.setSelectedIndex(day - 1);
+            year.setSelectedValue(2025);
         }
 
         @Override
@@ -88,10 +96,8 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
             super.setEnabled(enabled);
         }
 
-        @SuppressWarnings("unchecked")
-        private JComboBox<Object> add(int from, int to, @Nullable CenteredCellRenderer renderer) {
-            JComboBox<Object> comboBox = (JComboBox<Object>) super.add(new JComboBox<>(IntStream.rangeClosed(from, to).boxed().toArray(Integer[]::new)));
-            comboBox.setRenderer(renderer == null ? new CenteredCellRenderer() : renderer);
+        private IntRangedComboBox add(int from, int to, @Nullable DefaultListCellRenderer renderer) {
+            IntRangedComboBox comboBox = (IntRangedComboBox) super.add(new IntRangedComboBox(from, to, renderer));
             comboBox.setFont(Main.FONT_PATUA);
             comboBox.addItemListener(event -> {
                 if (event.getStateChange() == ItemEvent.SELECTED) {
@@ -102,25 +108,59 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
             return comboBox;
         }
 
+        private void validateDay() {
+            int month = this.month.getSelectedValue();
+            int day = MathUtils.clampInclusive(this.date.getSelectedValue(), 1, Month.of(month).length(Year.isLeap(year.getSelectedValue())));
+            this.date.setSelectedValue(day);
+        }
+
         private void updateTime() {
             this.datePicker.setDate(
-                    (int) this.date.getSelectedItem(),
-                    (int) this.month.getSelectedItem(),
-                    (int) this.year.getSelectedItem()
+                    this.date.getSelectedValue(),
+                    this.month.getSelectedValue(),
+                    this.year.getSelectedValue()
             );
         }
 
-        private static final class MonthRenderer extends CenteredCellRenderer {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                return MathUtils.make((JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus),
-                        label -> label.setText(WordUtils.capitalizeFully(Month.of((int) value).toString())));
-            }
+        private void setDate(Date date) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+            this.year.setSelectedValue(calendar.get(Calendar.YEAR));
+            this.month.setSelectedValue(calendar.get(Calendar.MONTH) + 1);
+            this.date.setSelectedValue(calendar.get(Calendar.DATE));
         }
 
-        private static class CenteredCellRenderer extends DefaultListCellRenderer {
-            public CenteredCellRenderer() {
-                super.setHorizontalAlignment(JLabel.CENTER);
+        private static class IntRangedComboBox extends JComboBox<Object> {
+            private final int from;
+
+            public IntRangedComboBox(int from, int to, @Nullable DefaultListCellRenderer renderer) {
+                super(IntStream.rangeClosed(from, to).boxed().toArray(Integer[]::new));
+                this.from = from;
+                if (renderer != null) {
+                    super.setRenderer(renderer);
+                }
+                if (super.getRenderer() instanceof JLabel r)
+                    r.setHorizontalAlignment(JLabel.CENTER);
+            }
+
+            @Deprecated
+            @Override
+            public void setSelectedItem(Object anObject) {
+                super.setSelectedItem(anObject);
+            }
+
+            @Deprecated
+            @Override
+            public @Nullable Object getSelectedItem() {
+                return super.getSelectedItem();
+            }
+
+            public void setSelectedValue(int value) {
+                super.setSelectedIndex(value - this.from);
+            }
+
+            public int getSelectedValue() {
+                return (int) super.getSelectedItem();
             }
         }
     }

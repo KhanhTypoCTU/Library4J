@@ -7,14 +7,18 @@ import ctu.cict.khanhtypo.utils.DatabaseUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-public interface IBookDB {
-    void deleteBookEntry(Book book);
+public interface IBookDataBridge {
+    void deleteBookEntry(BookEntry book);
 
     void addBookEntry(Book book) throws MongoWriteException;
+
+    //return the queried books count
+    int searchBooks(Bson filter);
+
+    void updateBookEntry(BookEntry book, Book updatedBook);
 
     default MongoCollection<Document> getCollection() {
         return DatabaseUtils.getBooks();
     }
 
-    void searchBooks(Bson filter);
 }

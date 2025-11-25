@@ -12,17 +12,21 @@ import ctu.cict.khanhtypo.forms.fillableform.SearchBookScreen;
 import ctu.cict.khanhtypo.utils.DatabaseUtils;
 import ctu.cict.khanhtypo.utils.MathUtils;
 import ctu.cict.khanhtypo.utils.ScreenUtils;
-import net.miginfocom.swing.MigLayout;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import javax.swing.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.TitledBorder;
+import java.awt.event.ContainerAdapter;
+import java.awt.event.ContainerEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.Objects;
 
-public class BookDatabaseScreen implements IBookDB {
+public class BookDatabaseScreen implements IBookDataBridge {
     private static final int MAX_PER_PAGE = 15;
     private int maxPages;
     private int currentPage;
@@ -31,12 +35,12 @@ public class BookDatabaseScreen implements IBookDB {
     private JButton searchButton;
     private JButton nextPage;
     private JButton previousPage;
-    private JPanel crudPanel;
     private JLabel title;
-    private JScrollPane booksScrollable;
-    private JPanel booksContainer;
     private JLabel pagesDisplayLabel;
-    private BookEntry[] bookEntries;
+    private BookListScreen bookList;
+    private JPanel contentsLeft;
+    private JPanel pagesPanel;
+    private JPanel contentsRight;
     private final List<JButton> leftSideButtons;
 
     public JPanel getBasePanel() {
@@ -48,20 +52,14 @@ public class BookDatabaseScreen implements IBookDB {
         pagesDisplayLabel.setFont(Main.FONT_PATUA);
         this.calculateMaxPages();
         title.setFont(Main.FONT_PATUA);
-        booksScrollable.getVerticalScrollBar().setUnitIncrement(12);
-        booksContainer.setLayout(new MigLayout("wrap" + (Main.IN_DEV ? ", debug" : ""), "[left]", "[]"));
+        this.bookList.setPreferredSize(968, 843);
+
+        bookList.getVerticalScrollBar().setUnitIncrement(16);
         this.loadBooks(1, false);
         nextPage.addActionListener(e ->
                 loadBooks(currentPage + 1, false));
         previousPage.addActionListener(e ->
                 loadBooks(currentPage - 1, false));
-        booksScrollable.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                resizeAllEntries();
-            }
-        });
-
         leftSideButtons = List.of(addBookButton, searchButton, nextPage, previousPage);
         leftSideButtons.forEach(b -> {
             b.setFont(Main.FONT_PATUA.deriveFont(15f));
@@ -88,15 +86,6 @@ public class BookDatabaseScreen implements IBookDB {
                 }));
     }
 
-    private void resizeAllEntries() {
-        SwingUtilities.invokeLater(() -> {
-            int width = booksScrollable.getWidth();
-            for (BookEntry bookEntry : bookEntries) {
-                bookEntry.resizeWidth(width);
-            }
-        });
-    }
-
     private void reloadTitle() {
         this.title.setText("BOOK LISTINGS | " + DatabaseUtils.getBooks().countDocuments() + " entries");
     }
@@ -114,25 +103,11 @@ public class BookDatabaseScreen implements IBookDB {
                 DatabaseUtils.getBooks().find().skip((page - 1) * MAX_PER_PAGE)
                         .limit(MAX_PER_PAGE)
                         .map(Book::fromDocument), Objects::nonNull), Book.class);
-
-
         displayBooks(keepScrollPosition, books);
     }
 
     public void displayBooks(boolean keepScrollPosition, Book[] books) {
-        booksContainer.removeAll();
-        BookEntry[] entries = new BookEntry[books.length];
-        for (int i = 0; i < books.length; i++) {
-            Book book = books[i];
-            BookEntry bookEntry = new BookEntry(this, book, false);
-            SwingUtilities.invokeLater(() ->
-                    booksContainer.add(bookEntry.getBasePanel(booksScrollable), "span")
-            );
-            entries[i] = bookEntry;
-        }
-        this.bookEntries = entries;
-        booksContainer.revalidate();
-        booksContainer.repaint();
+        this.bookList.reload(this, books, true);
         onPageChanged();
         reloadScrollBar(keepScrollPosition);
     }
@@ -147,11 +122,13 @@ public class BookDatabaseScreen implements IBookDB {
             this.previousPage.setEnabled(true);
         }
         this.pagesDisplayLabel.setText(currentPage + "/" + maxPages);
-
+        ScreenUtils.packFrame(Main.baseFrame);
     }
 
-    public void deleteBookEntry(Book book) {
-        Document deleted = DatabaseUtils.getBooks().findOneAndDelete(Filters.eq("_id", book.id().getAsGenericObject()));
+    @Override
+    public void deleteBookEntry(BookEntry bookEntry) {
+        Document deleted = DatabaseUtils.getBooks()
+                .findOneAndDelete(Filters.eq("_id", bookEntry.getBookId().getAsGenericObject()));
         System.out.println("Deleted : " + deleted);
         this.refreshDatabaseScreen();
     }
@@ -164,11 +141,51 @@ public class BookDatabaseScreen implements IBookDB {
     }
 
     @Override
-    public void searchBooks(Bson filter) {
+    public int searchBooks(Bson filter) {
         Book[] books = Iterables.toArray(this.getCollection().find(filter).map(Book::fromDocument), Book.class);
+        if (books.length == 0) return 0;
         SwingUtilities.invokeLater(() -> {
-            SearchResultScreen screen = new SearchResultScreen(this, books);
+            JDialog dialog = new JDialog(Main.baseFrame, "Book Results", true);
+            BookListScreen screen = new BookListScreen();
+            screen.reload(this, books, true);
+            screen.getBasePane().setBorder(screen.createTitledBorder("SEARCH RESULTS : " + screen.getEntryCount() + " Entries."));
+            screen.getEntriesList().addContainerListener(
+                    new ContainerAdapter() {
+                        @Override
+                        public void componentRemoved(ContainerEvent e) {
+                            screen.getBasePane().setBorder(screen.createTitledBorder("SEARCH RESULTS : " + screen.getEntryCount() + " Entries."));
+                        }
+                    }
+            );
+            dialog.setContentPane(screen.getBasePane());
+            ScreenUtils.packFrame(dialog);
+            dialog.setVisible(true);
+            dialog.addWindowStateListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    if (screen.hasChanged())
+                        BookDatabaseScreen.this.refreshDatabaseScreen();
+                }
+            });
         });
+        return books.length;
+    }
+
+    /**
+     * @param bookEntry - the book object that contains information of the book, must be an object in the list.
+     */
+    @Override
+    public void updateBookEntry(BookEntry bookEntry, Book updatedBook) {
+        Document previousData = this.getCollection().findOneAndUpdate(
+                Filters.eq("_id", bookEntry.getBookId().getAsGenericObject()),
+                new BsonDocument("$set", updatedBook.toDocument().toBsonDocument())
+        );
+
+        if (Main.IN_DEV)
+            System.out.println("Updated : \n\tBefore: " + previousData + "\n\t" + "After :" + updatedBook.toDocument());
+
+        updatedBook.setBookId(bookEntry.getBookId());
+        bookEntry.setBook(updatedBook);
     }
 
     private void refreshDatabaseScreen() {
@@ -181,17 +198,10 @@ public class BookDatabaseScreen implements IBookDB {
 
     public void reloadScrollBar(boolean keepScrollPosition) {
         SwingUtilities.invokeLater(() -> {
-                    JScrollBar verticalScrollBar = this.booksScrollable.getVerticalScrollBar();
-                    if (keepScrollPosition)
-                        verticalScrollBar.setValue(MathUtils.clampInclusive(verticalScrollBar.getValue(), verticalScrollBar.getMinimum(), verticalScrollBar.getMaximum()));
-                    else verticalScrollBar.setValue(0);
-                    booksScrollable.setVerticalScrollBar(verticalScrollBar);
-                }
-        );
-    }
-
-    @Override
-    public String toString() {
-        return "MAIN SCREEN";
+            JScrollBar verticalScrollBar = this.bookList.getVerticalScrollBar();
+            if (keepScrollPosition)
+                verticalScrollBar.setValue(MathUtils.clampInclusive(verticalScrollBar.getValue(), verticalScrollBar.getMinimum(), verticalScrollBar.getMaximum()));
+            else verticalScrollBar.setValue(0);
+        });
     }
 }

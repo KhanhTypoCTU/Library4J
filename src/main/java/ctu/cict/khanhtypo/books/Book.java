@@ -1,6 +1,7 @@
 package ctu.cict.khanhtypo.books;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 
 import java.text.DateFormat;
@@ -34,8 +35,12 @@ public final class Book {
     private Book loadBookId(Document source) {
         if (!source.containsKey("_id"))
             System.out.println("Book \"" + this.title + "\" is being marked for creation, deferring BookId...");
-        else this.deferredBookId = BookId.from(source.get("_id"));
+        else setBookId(BookId.from(source.get("_id")));
         return this;
+    }
+
+    public void setBookId(BookId id) {
+        this.deferredBookId = id;
     }
 
     public String isbnString() {
@@ -119,11 +124,11 @@ public final class Book {
         return status;
     }
 
-    public String[] authors() {
-        return authors;
+    public String authors() {
+        return StringUtils.join(authors, ", ");
     }
 
-    public String[] categories() {
-        return categories;
+    public String categories() {
+        return StringUtils.join(categories, ", ");
     }
 }
