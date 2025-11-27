@@ -17,8 +17,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import javax.swing.*;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.event.ContainerAdapter;
 import java.awt.event.ContainerEvent;
 import java.awt.event.WindowAdapter;
@@ -148,25 +146,28 @@ public class BookDatabaseScreen implements IBookDataBridge {
             JDialog dialog = new JDialog(Main.baseFrame, "Book Results", true);
             BookListScreen screen = new BookListScreen();
             screen.reload(this, books, true);
-            screen.getBasePane().setBorder(screen.createTitledBorder("SEARCH RESULTS : " + screen.getEntryCount() + " Entries."));
+            screen.getBasePane().setBorder(
+                    screen.createTitledBorder("SEARCH RESULTS : " + screen.getEntryCount() + " Entries.")
+            );
             screen.getEntriesList().addContainerListener(
                     new ContainerAdapter() {
                         @Override
                         public void componentRemoved(ContainerEvent e) {
-                            screen.getBasePane().setBorder(screen.createTitledBorder("SEARCH RESULTS : " + screen.getEntryCount() + " Entries."));
+                            screen.getBasePane().setBorder(
+                                    screen.createTitledBorder("SEARCH RESULTS : " + screen.getEntryCount() + " Entries."));
                         }
                     }
             );
             dialog.setContentPane(screen.getBasePane());
             ScreenUtils.packFrame(dialog);
-            dialog.setVisible(true);
-            dialog.addWindowStateListener(new WindowAdapter() {
+            dialog.addWindowListener(new WindowAdapter() {
                 @Override
-                public void windowClosed(WindowEvent e) {
+                public void windowClosing(WindowEvent e) {
                     if (screen.hasChanged())
                         BookDatabaseScreen.this.refreshDatabaseScreen();
                 }
             });
+            dialog.setVisible(true);
         });
         return books.length;
     }

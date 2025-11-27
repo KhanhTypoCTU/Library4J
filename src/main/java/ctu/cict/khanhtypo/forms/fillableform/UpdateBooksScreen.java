@@ -4,7 +4,7 @@ import ctu.cict.khanhtypo.books.Book;
 import ctu.cict.khanhtypo.forms.BookDatabaseScreen;
 import ctu.cict.khanhtypo.forms.BookEntry;
 import ctu.cict.khanhtypo.forms.IBookDataBridge;
-import ctu.cict.khanhtypo.forms.component.DatePicker;
+import ctu.cict.khanhtypo.forms.components.DatePicker;
 
 import javax.swing.*;
 import java.awt.*;
@@ -38,6 +38,7 @@ public class UpdateBooksScreen extends CreateBookScreen {
         if (super.validateFields()) {
             Book composed = super.composeBook();
             databaseBridge.updateBookEntry(this.bookEntry, composed);
+            this.bookEntry.setChanged();
             super.closeScreen();
         }
     }

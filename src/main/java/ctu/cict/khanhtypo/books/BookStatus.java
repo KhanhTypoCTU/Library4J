@@ -1,6 +1,8 @@
 package ctu.cict.khanhtypo.books;
 
-public enum BookStatus {
+import ctu.cict.khanhtypo.forms.components.IStringRepresentable;
+
+public enum BookStatus implements IStringRepresentable {
     PUBLISH("Released"),
     DISCONTINUED("Discontinued"),
     MEAP("Early-Access"),
@@ -13,5 +15,10 @@ public enum BookStatus {
 
     public String getDisplayText() {
         return displayText;
+    }
+
+    @Override
+    public String getRepresentingString() {
+        return this.getDisplayText();
     }
 }

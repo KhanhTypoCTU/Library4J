@@ -1,4 +1,4 @@
-package ctu.cict.khanhtypo.forms.component;
+package ctu.cict.khanhtypo.forms.components;
 
 import javax.swing.text.JTextComponent;
 import java.awt.*;

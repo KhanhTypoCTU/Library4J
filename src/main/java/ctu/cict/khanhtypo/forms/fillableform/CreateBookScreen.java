@@ -8,10 +8,11 @@ import ctu.cict.khanhtypo.books.BookStatus;
 import ctu.cict.khanhtypo.forms.BookDatabaseScreen;
 import ctu.cict.khanhtypo.forms.FillableFormScreen;
 import ctu.cict.khanhtypo.forms.IBookDataBridge;
-import ctu.cict.khanhtypo.forms.component.AlternativeTextRenderer;
-import ctu.cict.khanhtypo.forms.component.DatePicker;
-import ctu.cict.khanhtypo.forms.component.IBsonRepresentableComponent;
+import ctu.cict.khanhtypo.forms.components.DatePicker;
+import ctu.cict.khanhtypo.forms.components.EnumTextCellRenderer;
+import ctu.cict.khanhtypo.forms.components.IBsonRepresentableComponent;
 import ctu.cict.khanhtypo.utils.MathUtils;
+import org.apache.commons.validator.routines.ISBNValidator;
 
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
@@ -19,6 +20,7 @@ import java.awt.*;
 import java.util.Objects;
 
 public class CreateBookScreen extends FillableFormScreen {
+    private static final ISBNValidator ISBN_VALIDATOR =  ISBNValidator.getInstance(false);
     public CreateBookScreen(BookDatabaseScreen databaseBridge, Dialog window) {
         super(databaseBridge, window, window.getTitle(), "Create");
     }
@@ -33,8 +35,8 @@ public class CreateBookScreen extends FillableFormScreen {
         try {
             if (this.validateFields()) {
                 databaseBridge.addBookEntry(this.composeBook());
-                closeScreen();
                 databaseBridge.getCollection().dropIndex(index);
+                closeScreen();
             }
         } catch (MongoWriteException e) {
             if (e.getError().getCategory() == ErrorCategory.DUPLICATE_KEY) {
@@ -43,7 +45,6 @@ public class CreateBookScreen extends FillableFormScreen {
         } catch (Exception e) {
             this.displayStatus("Error creating book entry. " + e.getMessage());
         }
-
     }
 
     @Override
@@ -63,12 +64,17 @@ public class CreateBookScreen extends FillableFormScreen {
                 new FormField("Book Status*", "Status of this book entry", "status",
                         IBsonRepresentableComponent.wrap(
                                 MathUtils.make(new JComboBox<>(BookStatus.values()), comboBox ->
-                                    comboBox.setRenderer(new AlternativeTextRenderer<>(BookStatus::getDisplayText))
+                                        comboBox.setRenderer(new EnumTextCellRenderer())
                                 ), comboBox -> Objects.requireNonNull(comboBox.getSelectedItem()).toString()
                         ), n -> null),
-                new FormField("ISBN*", "Required, isbn v10 or v13 of the book.",
+                new FormField("ISBN*", "Required, ISBN-10 or ISBN-13 of the book.",
                         "isbn", createTextFieldWithFilter("^\\d{1,13}$"),
-                        text -> ((JTextComponent) text).getText().isBlank() ? "ISBN can not be blank." : null
+                        text -> {
+                            String isbn = ((JTextComponent) text).getText();
+                            if (isbn.isBlank()) return "ISBN can not be blank.";
+                            if (!ISBN_VALIDATOR.isValid(isbn)) return "Not a valid ISBN-10 or ISBN-13.";
+                            return null;
+                        }
                 ),
                 new FormField("Authors: ", "Author(s) of the book, multiple names must be separated by a comma."
                         , "authors", textToArrayMapper(),

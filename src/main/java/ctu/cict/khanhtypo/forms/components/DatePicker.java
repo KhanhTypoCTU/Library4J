@@ -1,4 +1,4 @@
-package ctu.cict.khanhtypo.forms.component;
+package ctu.cict.khanhtypo.forms.components;
 
 import ctu.cict.khanhtypo.Main;
 import ctu.cict.khanhtypo.utils.MathUtils;
@@ -57,17 +57,25 @@ public class DatePicker extends JPanel implements IBsonRepresentableComponent {
     }
 
     @Override
-    public Object getAsBsonValue() {
-        return this.nowButton.isSelected() ?
+    public Date getAsBsonValue() {
+        return isNow() ?
                 Date.from(Instant.now()) :
                 MathUtils.make(Calendar.getInstance(),
                         c -> c.set(this.date.getYear(), this.date.getMonthValue() - 1, this.date.getDayOfMonth())
                 ).getTime();
     }
 
+    public boolean isNow() {
+        return this.nowButton.isSelected();
+    }
+
     @Override
     public Component getComponent() {
         return this;
+    }
+
+    public JRadioButton getNow() {
+        return this.nowButton;
     }
 
     @SuppressWarnings("DataFlowIssue")

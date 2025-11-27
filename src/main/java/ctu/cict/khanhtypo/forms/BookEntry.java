@@ -67,11 +67,9 @@ public class BookEntry {
         this.setChanged();
     }
 
-    private void setChanged() {
+    public void setChanged() {
         this.changeListener.run();
     }
-
-    ;
 
     private void transformButton(JButton button, ImageIcon icon) {
         button.setIcon(icon);

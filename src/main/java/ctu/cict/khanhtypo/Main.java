@@ -1,6 +1,7 @@
 package ctu.cict.khanhtypo;
 
 import ctu.cict.khanhtypo.forms.BookDatabaseScreen;
+import ctu.cict.khanhtypo.utils.DatabaseUtils;
 import ctu.cict.khanhtypo.utils.ResourceUtils;
 import ctu.cict.khanhtypo.utils.ScreenUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -11,7 +12,6 @@ import java.io.IOException;
 import java.util.function.Function;
 
 public class Main {
-    public static final int MIN_FRAME_WIDTH = 900;
     public static final Font FONT_PATUA;
     public static final Font FONT_MORE_OFFC_PRO;
     public static final Font FONT_MORE_OFFC_ITALIC;
@@ -23,6 +23,7 @@ public class Main {
     public static void main(String[] args) {
         //https://github.com/ozlerhakan/mongodb-json-files/blob/master/datasets/books.json
         IN_DEV = ArrayUtils.contains(args, "devmode");
+        DatabaseUtils.initiate();
         if (ScreenUtils.canScreenDisplay()) {
             SwingUtilities.invokeLater(() -> {
                         JFrame frame = new JFrame();
@@ -31,11 +32,10 @@ public class Main {
                         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                         BookDatabaseScreen baseScreen = new BookDatabaseScreen();
                         frame.setContentPane(baseScreen.getBasePanel());
-                        //frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                         frame.setVisible(true);
                         frame.setPreferredSize(new Dimension(1140, 880));
                         ScreenUtils.packFrame(frame);
-                        frame.setResizable(false);
+                        //frame.setResizable(false);
                     }
             );
 

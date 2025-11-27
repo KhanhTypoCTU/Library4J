@@ -3,7 +3,7 @@ package ctu.cict.khanhtypo.forms;
 import com.google.common.base.Preconditions;
 import ctu.cict.khanhtypo.Main;
 import ctu.cict.khanhtypo.books.Book;
-import ctu.cict.khanhtypo.forms.component.IBsonRepresentableComponent;
+import ctu.cict.khanhtypo.forms.components.IBsonRepresentableComponent;
 import ctu.cict.khanhtypo.utils.MathUtils;
 import ctu.cict.khanhtypo.utils.SpringUtilities;
 import net.miginfocom.swing.MigLayout;

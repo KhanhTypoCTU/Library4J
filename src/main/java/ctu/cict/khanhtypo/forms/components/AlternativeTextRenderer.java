@@ -1,4 +1,4 @@
-package ctu.cict.khanhtypo.forms.component;
+package ctu.cict.khanhtypo.forms.components;
 
 import ctu.cict.khanhtypo.utils.MathUtils;
 import org.intellij.lang.annotations.MagicConstant;
@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Function;
 
-public final class AlternativeTextRenderer<T> extends DefaultListCellRenderer {
+public class AlternativeTextRenderer<T> extends DefaultListCellRenderer {
     private final Function<T, String> factory;
 
     public AlternativeTextRenderer(

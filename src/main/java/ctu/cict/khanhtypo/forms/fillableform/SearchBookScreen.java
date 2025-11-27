@@ -6,8 +6,10 @@ import ctu.cict.khanhtypo.books.BookStatus;
 import ctu.cict.khanhtypo.forms.BookDatabaseScreen;
 import ctu.cict.khanhtypo.forms.FillableFormScreen;
 import ctu.cict.khanhtypo.forms.IBookDataBridge;
-import ctu.cict.khanhtypo.forms.component.AlternativeTextRenderer;
-import ctu.cict.khanhtypo.forms.component.IBsonRepresentableComponent;
+import ctu.cict.khanhtypo.forms.components.DateSearchField;
+import ctu.cict.khanhtypo.forms.components.EnumTextCellRenderer;
+import ctu.cict.khanhtypo.forms.components.IBsonRepresentableComponent;
+import ctu.cict.khanhtypo.forms.components.IStringRepresentable;
 import ctu.cict.khanhtypo.utils.MathUtils;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -51,10 +53,14 @@ public class SearchBookScreen extends FillableFormScreen {
                                 "status",
                                 IBsonRepresentableComponent.wrap(
                                         MathUtils.make(new JComboBox<>(BookStatusFilter.values()), comboBox ->
-                                                comboBox.setRenderer(new AlternativeTextRenderer<>(BookStatusFilter::getDisplay))
+                                                comboBox.setRenderer(new EnumTextCellRenderer(JLabel.LEFT))
                                         ), comboBox -> Objects.requireNonNull(comboBox.getSelectedItem()).toString()
                                 )
-                        ), (key, component) -> ((BookStatusFilter) Objects.requireNonNull(((JComboBox<?>) component).getSelectedItem())).getFilter())
+                        ), (key, component) -> ((BookStatusFilter) Objects.requireNonNull(((JComboBox<?>) component).getSelectedItem())).getFilter()),
+                createField(
+                        new FormField("Release Date:", "Release Date of books to find", "publishedDate", new DateSearchField()),
+                        (key, field) -> ((DateSearchField) field).getFilter(key)
+                )
         };
     }
 
@@ -120,7 +126,7 @@ public class SearchBookScreen extends FillableFormScreen {
         }
     }
 
-    private enum BookStatusFilter {
+    private enum BookStatusFilter implements IStringRepresentable {
         IGNORED("---", null),
         RELEASED(BookStatus.PUBLISH),
         DISCONTINUED(BookStatus.DISCONTINUED),
@@ -145,6 +151,11 @@ public class SearchBookScreen extends FillableFormScreen {
 
         public Bson getFilter() {
             return filter;
+        }
+
+        @Override
+        public String getRepresentingString() {
+            return this.getDisplay();
         }
     }
 }
